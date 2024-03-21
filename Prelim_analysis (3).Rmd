@@ -18,6 +18,7 @@ library(lme4)
 library(lmerTest)
 library(emmeans)
 library(car)
+library(ggplot2)
 ```
 ```{r}
 CFF_scenarios <- read.csv("../Data/CF_scenarios/CF22_scenarios.csv", header = TRUE)

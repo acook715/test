@@ -1,0 +1,214 @@
+---
+title: "Prelim Analysis"
+author: "Kelsey Jensen"
+date: '2023-03-20'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(car)
+```
+```{r}
+CFF_scenarios <- read.csv("../Data/CF_scenarios/CF22_scenarios.csv", header = TRUE)
+L7_all_long <- read.csv("../Data/L7_Comparisons/L7_paired_long_scenarios.csv", header = TRUE)
+L7_fields <- read.csv("L722_fields.csv", header = TRUE)
+main1922_all_long <- read.csv("../Data/CF_Comparison/Main1922_all_long.csv", header = TRUE) %>% dplyr::select(-X)
+
+```
+Need to go through and replace all "0" values with NA for TCa and TCb
+Is the L7 fields data also in the "all_long" version? Is there any additional info needed?
+
+Main Farm
+Years: 2019, 2022
+Scenario: management perennial 
+Depth: 15, 30
+Plots/field: "Name"
+```{r, echo = FALSE}
+maindata <- main1922_all_long %>% filter(Scenario_1 != "") %>% filter(Depth != "0-30") %>% filter(TC != 0) 
+maindata$unique_ID <- as.factor(maindata$x * maindata$y)
+maindata$Year <- as.factor(maindata$Year)
+maindata$Depth <- as.factor(maindata$Depth)
+maindata$Name <- as.factor(maindata$Name)
+
+maindata %>% ggplot(aes(x = Depth, y = TC, fill = Scenario_1)) + geom_boxplot() + facet_wrap(~Year)
+
+
+lmer1 <- lmer(logit(TC/100) ~ Depth*Year*Scenario_1 + (1|Name) + (1|unique_ID), data = maindata)
+
+plot(predict(lmer1), residuals(lmer1))
+qqnorm(residuals(lmer1)); qqline(residuals(lmer1))
+hist(residuals(lmer1))
+
+summary(lmer1)
+anova(lmer1)
+
+paircomp1 <- summary((emmeans(lmer1, pairwise ~Scenario_1|Year|Depth)$contrasts))
+paircomp2 <- summary((emmeans(lmer1, pairwise ~Year|Scenario_1|Depth)$contrasts))
+emmeans1 <- summary(emmeans(lmer1,  ~Scenario_1+Year+Depth), type= "response")
+```
+
+Main Farm
+Years: 2019, 2022
+Scenario: agroforestry
+Depth: 15, 30
+Plots/field: "Name"
+```{r, echo = FALSE}
+maindata2 <- main1922_all_long %>% filter(Scenario_2 != "") %>% filter(Depth != "0-30") %>% filter(TC != 0) 
+maindata2$unique_ID <- as.factor(maindata2$x * maindata2$y)
+maindata2$Year <- as.factor(maindata2$Year)
+maindata2$Depth <- as.factor(maindata2$Depth)
+maindata2$Name <- as.factor(maindata2$Name)
+
+maindata2 %>% ggplot(aes(x = Depth, y = TC, fill = Scenario_2)) + geom_boxplot() + facet_wrap(~Year)
+
+
+lmerAg <- lmer(logit(TC/100) ~ Depth*Year*Scenario_2 + (1|Name) + (1|unique_ID), data = maindata2)
+
+plot(predict(lmerAg), residuals(lmerAg))
+qqnorm(residuals(lmerAg)); qqline(residuals(lmerAg))
+hist(residuals(lmerAg))
+
+summary(lmerAg)
+anova(lmerAg)
+
+paircompAg <- summary((emmeans(lmerAg, pairwise ~Scenario_2|Year|Depth)$contrasts))
+paircompAg2 <- summary((emmeans(lmerAg, pairwise ~Year|Scenario_2|Depth)$contrasts))
+emmeansAg <- summary(emmeans(lmerAg,  ~Scenario_2+Year+Depth), type= "response")
+```
+
+Main Farm
+Years: 2019, 2022
+Scenario: grazing
+Depth: 15, 30
+Plots/field: "Name"
+```{r, echo = FALSE}
+maindata3 <- main1922_all_long %>% filter(Scenario_3 != "") %>% filter(Depth != "0-30") %>% filter(TC != 0) 
+maindata3$unique_ID <- as.factor(maindata3$x * maindata3$y)
+maindata3$Year <- as.factor(maindata3$Year)
+maindata3$Depth <- as.factor(maindata3$Depth)
+maindata3$Name <- as.factor(maindata3$Name)
+
+maindata3 %>% ggplot(aes(x = Depth, y = TC, fill = Scenario_3)) + geom_boxplot() + facet_wrap(~Year)
+
+
+lmerGr <- lmer(logit(TC/100) ~ Depth*Year*Scenario_3 + (1|Name) + (1|unique_ID), data = maindata3)
+
+plot(predict(lmerGr), residuals(lmerGr))
+qqnorm(residuals(lmerGr)); qqline(residuals(lmerGr))
+hist(residuals(lmerGr))
+
+summary(lmerGr)
+anova(lmerGr)
+
+paircompGr <- summary((emmeans(lmerGr, pairwise ~Scenario_3|Year|Depth)$contrasts))
+paircompGr2 <- summary((emmeans(lmerGr, pairwise ~Year|Scenario_3|Depth)$contrasts))
+emmeansGr <- summary(emmeans(lmerGr,  ~Scenario_3+Year+Depth), type= "response")
+```
+
+Lock 7
+Years: 2020, 2021, 2022
+Scenario: upper v. lower
+Depth: 15, 30
+Plots/field: "Name"
+```{r, echo = FALSE}
+L7_Data1 <- L7_all_long %>% filter(Depth != 0) 
+L7_Data1$unique_ID <- as.factor(L7_Data1$x * L7_Data1$y)
+L7_Data1$Year <- as.factor(L7_Data1$Year)
+L7_Data1$Depth <- as.factor(L7_Data1$Depth)
+L7_Data1$Name <- as.factor(L7_Data1$Name)
+
+L7_Data1 %>% ggplot(aes(x = Depth, y = TC, fill = Scenario_1)) + geom_boxplot() + facet_wrap(~Year)
+
+
+lmer71 <- lmer(logit(TC/100) ~ Depth*Year*Scenario_1 + (1|Name) + (1|unique_ID), data = L7_Data1)
+
+plot(predict(lmer71), residuals(lmer71))
+qqnorm(residuals(lmer71)); qqline(residuals(lmer71))
+hist(residuals(lmer71))
+
+summary(lmer71)
+anova(lmer71)
+
+paircomp71 <- summary((emmeans(lmer71, pairwise ~Scenario_1|Year|Depth)$contrasts))
+paircomp712 <- summary((emmeans(lmer71, pairwise ~Year|Scenario_1|Depth)$contrasts))
+emmeans71 <- summary(emmeans(lmer71,  ~Scenario_1+Year+Depth), type= "response")
+```
+
+Lock 7
+Years: 2020, 2021, 2022
+Scenario: Scenario 2
+Depth: 15, 30
+Plots/field: "Name"
+```{r}
+
+L7_Data1 %>% ggplot(aes(x = Depth, y = TC, fill = Scenario_2)) + geom_boxplot() + facet_wrap(~Year)
+
+
+lmer72 <- lmer(logit(TC/100) ~ Depth*Year*Scenario_2 + (1|Name) + (1|unique_ID), data = L7_Data1)
+
+plot(predict(lmer72), residuals(lmer72))
+qqnorm(residuals(lmer72)); qqline(residuals(lmer72))
+hist(residuals(lmer72))
+
+summary(lmer72)
+anova(lmer72)
+
+paircomp72 <- summary((emmeans(lmer72, pairwise ~Scenario_2|Year|Depth)$contrasts))
+paircomp722 <- summary((emmeans(lmer72, pairwise ~Year|Scenario_2|Depth)$contrasts))
+emmeans72 <- summary(emmeans(lmer72,  ~Scenario_2+Year+Depth), type= "response")
+```
+
+Lock 7
+Years: 2020, 2021, 2022
+Scenario: oct 2021 crop cover -> maybe just do 2021 vs 2022..? (scenario 3)
+Depth: 15, 30
+Plots/field: "Name"
+```{r}
+L7_Data1 %>% ggplot(aes(x = Depth, y = TC, fill = Scenario_3)) + geom_boxplot() + facet_wrap(~Year)
+
+
+lmer73 <- lmer(logit(TC/100) ~ Depth*Year*Scenario_3 + (1|Name) + (1|unique_ID), data = L7_Data1)
+
+plot(predict(lmer73), residuals(lmer73))
+qqnorm(residuals(lmer73)); qqline(residuals(lmer73))
+hist(residuals(lmer73))
+
+summary(lmer73)
+anova(lmer73)
+
+paircomp73 <- summary((emmeans(lmer73, pairwise ~Scenario_3|Year|Depth)$contrasts))
+paircomp732 <- summary((emmeans(lmer73, pairwise ~Year|Scenario_3|Depth)$contrasts))
+emmeans73 <- summary(emmeans(lmer73,  ~Scenario_3+Year+Depth), type= "response")
+```
+
+Lock 7
+Years: 2020, 2021, 2022
+Scenario: land cover may 2022 (cover crop, millet)
+Depth: 15, 30
+Plots/field: "Name"
+```{r}
+L7_Data1 %>% ggplot(aes(x = Depth, y = TC, fill = Scenario_4)) + geom_boxplot() + facet_wrap(~Year)
+
+
+lmer74 <- lmer(logit(TC/100) ~ Depth*Year*Scenario_4 + (1|Name) + (1|unique_ID), data = L7_Data1)
+
+plot(predict(lmer74), residuals(lmer74))
+qqnorm(residuals(lmer74)); qqline(residuals(lmer74))
+hist(residuals(lmer74))
+
+summary(lmer74)
+anova(lmer74)
+
+paircomp74 <- summary((emmeans(lmer74, pairwise ~Scenario_4|Year|Depth)$contrasts))
+paircomp742 <- summary((emmeans(lmer74, pairwise ~Year|Scenario_4|Depth)$contrasts))
+emmeans74 <- summary(emmeans(lmer74,  ~Scenario_4+Year+Depth), type= "response")
+```
+

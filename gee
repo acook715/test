@@ -1,0 +1,38 @@
+// BEFORE YOU START!!!!
+
+// 1. Search "USGS Landsat 8 Collection 2 Tier 1 TOA Reflectance"
+// 2. Import this Landsat 8 Collection
+// 3. Once your Landsat 8 imagery is loaded in create a polygon using a draw a rectangle tool anywhere in the world
+// 4. Now you should be set! Time to search for the errors in teh following code
+
+// HINT! There are 5 errors in the code, but all of you have access to the correct code from class 3_8,
+// and online in presentation "advanced_030824_gee" posted on The Spring.
+
+//SEARCH FOR THE ERRORS AND THEN UPLOAD BACK INTO YOUR GROUP'S CLOUD MASK CODE :)
+
+var lscoll =imageCollection.filterBounds(geometry)
+            .filterDate('2023-06-15','2023-10-01')
+            .filter(ee.Filter.lt('CLOUD_COVER', 10))
+            
+print(lscoll)
+
+var lsFirst =lscoll.first();
+
+print(lsFirst);
+
+var maskClouds = function(image) {
+  var scored= ee.Algorithms.Landsat.simpleCloudScore(image);
+  return image.updateMask(scored.select(['cloud']).lt(20))
+};
+
+var lsMask = lscoll.map(maskClouds)
+var lscomp=lsMask.median().clip(geometry)
+
+Map.addLayer(lscomp, {bands:['B4', 'B3', 'B2'], max:0.2284, gamma: 1.6}, "Landsat 8 Composite 2023",true)
+
+Map.centerObject(geometry, 7)
+
+var title=ui.Label({value:"Cloud Free Imagery",
+style:{fontWeight: 'bold', fontSize:'24px'}})
+
+Map.add(title)
